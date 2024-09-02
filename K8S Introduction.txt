@@ -1,0 +1,112 @@
+	• KUBERNETES (K8S) 
+	- We can use the method of Orchestration to handle the container in Kubernetes which we can't able to do in Docker 
+	- Docker develop their own Orchestration tool for handling the container as per convenience of deployment phase. 
+	- Docker Swarm is tool which can be use same as Kubernetes but there is one disadvantage of this tool. 
+	- It can only support the Containers which are made by the Docker therefore it has some limitation in the industry. 
+	- Where Kubernetes can support any Type of Containers in their environment which was develop by Google.
+
+
+	• POD 
+	- In K8s Pod are created and then in that pod Container are launched 
+	- In Pod there is Wrapping outside the Container that we are launched. 
+	- Therefore K8S develop their own environment for supporting the outside Type of Containers which is known as Wrapping of Pod 
+	- Suppose if launch Multiple Containers in a single Pod and if One Container is Crashed then other container also Crashed at that point of time which will lead to fail the entire system. 
+	- This multiple container method is called as Tightly Coupled 
+	- This is same as Virtualization where one EC2 crashed leads entire system failure. 
+	- So 99% of the time Single Container are kept in a One Pod. 
+
+
+	• Autoscaling Using K8S 
+	- It has some limitation regarding communication between two Containers in different Network. 
+	- There for to prevent the failure of Application we can kept the Containers in different EC2's. 
+	- To communicate between two or more Containers which can be created in different EC2's. 
+	- But it has limitation regarding communication where all the EC2 should be in Same Network for establishing the communication between the Containers 
+	- Where it will take the VPC CIDR for one EC2 and another VPC CIDR for another EC2 and then this all VPC network can be communicate using Peering. 
+	- And this above architecture is automatically managed by K8S using Plugins which will support by K8S.
+
+
+	• Maintain/Prevent from Failure of Application 
+	- Suppose if require Desired EC2 count = 2 which held the two-two container each for seamless running of applications 
+	- If one EC2 crashes for some reason then it will leads to failure of app. 
+	- Therefore to Control the Container management and EC2 Count K8S used another EC2 separated form that previous EC2's. 
+	- Where this new EC2 will managed the containers if crashed and also launched the new EC2 if there capacity of holding containers exceed.
+	- This EC2 is called MASTER NODE (Control Plane)
+	- It will only Control the container management but cannot be able to create the container itself. 
+	- Whereas containers can be created by the WORKER NODE. 
+	- Worker node first create the Pods and then containers launched in that Pod 
+	- If traffic on Application is high then we also use Two Worker Node. 
+	- These all Worker Node can communicate with Master Node 
+	- And all that Worker Nodes are in same network. 
+	- We can create as much as Container in Single Pod which will depends on the EC2 Capacity. 
+
+
+ 
+	• MASTER NODE ARCHITECTURE
+	1. KUBE API SERVER :- 
+	- Kube API Server interacts with API it is communication center for developers and other K8S components. 
+	- Its work has to make sure the work get done and coordinating between Master Node. 
+	
+	2. KUBE SCHEDULER :- 
+	- It has the information regarding the container count in which pod and which container should launch in which pod as requirement. 
+	- Node selection is done by kube scheduler 
+	- Kube Scheduler will take the action which are requested by the Kube API Server  to Create an Pod and then Launch the Containers in that Pod. 
+	
+	3. ETCD :- 
+	- This is a database of K8S which store the information regarding the Pod Count and Containers Count in that Pods 
+	- This data is store in the form Key Values just like Json      
+	- Then API server will ask to etcd for Recent State in where it has the data like in which Worker Node have how many Pods right now. 
+	- Then etcd will forward this data to Kube Scheduler then it will take the action regarding creation of Pod or launching containers in it.  
+	- After this it will again forward the msg to API Server that Worker Node-2 need the Pod to launch the container. 
+	- Then API will communicate with Worker Node-2 to create the Pod and launch the container it that Pod.
+	
+	4. CONTROL MANAGER 
+	- It will only use at the time of Autoscaling of Nodes 
+	- Control manager maintain the Desire/Min/Max Pod Count required for the same application.
+	- If there is need of Autoscaling then API Server directly communicate with Control Manager to handle the further process.
+	- Where it will ask the API Server to check the Current State data from ETCD that how many container are running or how much are required. 
+	- Again it will send this details to API Server where it will forward this details to Control Manager then it will decide to create the new Pod which will again pass to API server. 
+	- After that API server forward this details of ETCD & Control Manager to create a Pod in which Worker Node cause it all decided by Kube Scheduler that where to create a Pod.  
+	- Then finally API Server communicate with Worker Node where it has Kubelet  which create the Pod in that node. 
+	- There are two types of Autoscaling in K8S
+	1. Node Auto-Scaler 
+	- This auto-scaling based on the EC2's Capacity 
+	- It will directly create New Worker for scaling as traffic increases 
+	2. Horizontal Pod Auto-Scaler (HPA)
+	- This auto-scaling based on Pod capacity in that particular Worker Node.
+	- It will create New Pod for scaling as traffic increases
+	- Kubeadm init - This command will define the Master Node which is fire in one of the EC2. 
+
+
+
+
+	• WORKER NODE ARCHITECTURE 
+	1. KUBELET
+	- It will take the request from API server to manage the task in Worker Node. 
+	- It's mainly work is to create the Pods 
+	
+	2. CONTAINER RUNTIME 
+	- This component is use as a Container Software for launching Containers in the Pods which are created by the Kubelet already. 
+	
+	3. KUBE PROXY 
+	• Kube Proxy will handle the networking in the architecture 
+	• In which it will give the Response from worker node to maste node for established the commnication same as API Server works for Master node
+
+
+
+	• LOAD-BALANCING in K8S 
+	- Suppose we launch two Nginx sever in two different Pods for same application on worker node. 
+	- This Pods have assign with IPs same as Docker have the Port no. for communication. 
+	- If request is coming from the user then at that time SERVICE is used as a Load-balancer between that two Pods which is offered by K8S
+	- Where first request get to the Service LB then it will balance or distribute that request between that two Pods. 
+	- But suppose if we launch Two Pods in two different Worker nodes that is Worker node-1 and another one pod is in Worker node-2 then at that time we use AWS Elastic Load Balancer (ELB) between that two Worker Node i.e EC2 for request distribution from the user. 
+	- But ELB don't know that how many Pods are existing in that particular EC2 or Worker Node therefore it cannot able to distribute the request with balance. 
+	- When we setup the Service-LB from K8S at one EC2 or WNode at that it will applicable to all EC2. 
+	- This Service same at all EC2 or Worker Node which will maintain the request count for balancing between all the Pods. 
+	
+
+	2. WORKER NODE ARCHITECTURE
+	- Worker -> [ Kube Proxy / Kubelet / Container Engine ] 
+	- Kubelet - Pod - It will assign with IP which are able to launch the Containers in that 
+	- Container Engine - It uses containers tools like Docker, etc 
+	- Kubeadm join will generate a Token which are used to create the Worker Node for Master
+	- Kube Proxy will handle the networking in the architecture 
